@@ -22,9 +22,7 @@ class ImageRestController {
     }
 
     @GetMapping("/generate")
-    public List<String> generateImage(@RequestParam String message,
-                                      @RequestParam String style,
-                                      @RequestParam Integer count) {
+    public List<String> generateImage(@RequestParam String message, @RequestParam String style, @RequestParam Integer count) {
         return imageGenerationService.generate(message, style, count);
     }
 }

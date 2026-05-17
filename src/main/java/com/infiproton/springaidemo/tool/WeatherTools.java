@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Component
 @Slf4j
+@Component
 public class WeatherTools {
+
     private final RestTemplate restTemplate = new RestTemplate();
+
     @Value("${app.weather.api-key}")
     private String apiKey;
 

@@ -32,6 +32,7 @@ class ChatController {
 
     @PostMapping("/chat/audio/voice")
     public ResponseEntity<byte[]> voiceChat(@RequestParam("file") MultipartFile file) {
+
         // 1. Upload audio
         Map<String, Object> uploadResult = audioService.store(file);
         String storedFileName = (String) uploadResult.get("storedFileName");
