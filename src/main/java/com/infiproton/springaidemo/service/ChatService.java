@@ -29,16 +29,6 @@ public class ChatService {
     private final WeatherTools weatherTools;
     private final ContactsTool contactsTool;
 
-    public Flux<String> streamChat(String message) {
-        Prompt prompt = new Prompt(new UserMessage(message));
-
-        return chatClient.prompt(prompt)
-                .advisors(new QuestionAnswerAdvisor(vectorStore))
-                .tools(weatherTools, contactsTool)
-                .stream()
-                .content();
-    }
-
     public String chat(String conversationId, String message) {
         // generate id if not passed
         String convId = (conversationId == null || conversationId.isBlank())
@@ -59,6 +49,16 @@ public class ChatService {
                 .tools(weatherTools, contactsTool)
                 .user(message)
                 .call().content();
+    }
+
+    public Flux<String> streamChat(String message) {
+        Prompt prompt = new Prompt(new UserMessage(message));
+
+        return chatClient.prompt(prompt)
+                .advisors(new QuestionAnswerAdvisor(vectorStore))
+                .tools(weatherTools, contactsTool)
+                .stream()
+                .content();
     }
 
 }

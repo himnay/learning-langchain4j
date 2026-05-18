@@ -16,9 +16,7 @@ public class RecipeService {
     private final ChatClient chatClient;
 
     public String getDraftRecipe(String dish) {
-        Prompt draftPrompt = new Prompt(
-                new UserMessage("Write a recipe for " + dish + ". Include ingredients and preparation steps.")
-        );
+        Prompt draftPrompt = new Prompt(new UserMessage("Write a recipe for " + dish + ". Include ingredients and preparation steps."));
         return chatClient.prompt(draftPrompt).call().content();
     }
 

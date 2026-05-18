@@ -3,12 +3,14 @@ package com.infiproton.springaidemo.service;
 import com.infiproton.springaidemo.model.TravelPlan;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -27,7 +29,7 @@ public class TravelGuideService {
                 "city", city,
                 "days", days
         );
-        Prompt prompt = template.create(params);
+        Prompt prompt = new Prompt(List.of(template.createMessage(params), new UserMessage("Please provide a travel plan in JSON format.")));
 
         return chatClient.prompt(prompt)
                 .call()

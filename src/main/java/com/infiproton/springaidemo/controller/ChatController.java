@@ -30,6 +30,11 @@ class ChatController {
     private final AudioService audioService;
     private final ChatMemory chatMemory;
 
+    @PostMapping("/chat")
+    public String chat(@RequestBody ChatRequest chatRequest) {
+        return chatService.chat(chatRequest.conversationId(), chatRequest.message());
+    }
+
     @PostMapping("/chat/audio/voice")
     public ResponseEntity<byte[]> voiceChat(@RequestParam("file") MultipartFile file) {
 
@@ -80,16 +85,10 @@ class ChatController {
         return chatMemory.get(conversationId);
     }
 
-    @PostMapping("/chat")
-    public String chat(@RequestBody ChatRequest chatRequest) {
-        return chatService.chat(chatRequest.conversationId(), chatRequest.message());
-    }
-
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(@RequestBody ChatRequest chatRequest) {
         return chatService.streamChat(chatRequest.message());
     }
-
 
     @PostMapping("/load-pdfs")
     public String loadPdfs() throws IOException {
