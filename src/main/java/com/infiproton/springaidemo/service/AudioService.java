@@ -32,19 +32,27 @@ public class AudioService {
     private final OpenAiAudioTranscriptionModel transcriptionModel;
     private final OpenAiAudioSpeechModel speechModel;
 
-    public byte[] textToSpeech(String text) {
-        // 1. define options
-        OpenAiAudioSpeechOptions options = OpenAiAudioSpeechOptions.builder()
-                .model("tts-1") // tts-1, tts-1-hd
-                .voice("echo") // alloy, echo, fable, onyx, nova, shimmer
-                .build();
+    public Map<String, Object> store(MultipartFile file) {
+        try {
+            Files.createDirectories(AUDIO_DIR);
 
-        // 2. create prompt
-        SpeechPrompt prompt = new SpeechPrompt(text, options);
+            String fileId = UUID.randomUUID().toString();
+            String storedFileName = fileId + "_" + file.getOriginalFilename();
+            Path targetPath = AUDIO_DIR.resolve(storedFileName);
 
-        // 3. call LLM
-        SpeechResponse response = speechModel.call(prompt);
-        return response.getResult().getOutput();
+            Files.copy(file.getInputStream(), targetPath);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("fileId", fileId);
+            response.put("originalFilename", file.getOriginalFilename());
+            response.put("storedFileName", storedFileName);
+            response.put("contentType", file.getContentType());
+            response.put("size", file.getSize());
+            return response;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store audio file", e);
+        }
     }
 
     public String speechToText(String storedFileName) {
@@ -77,26 +85,18 @@ public class AudioService {
         }
     }
 
-    public Map<String, Object> store(MultipartFile file) {
-        try {
-            Files.createDirectories(AUDIO_DIR);
+    public byte[] textToSpeech(String text) {
+        // 1. define options
+        OpenAiAudioSpeechOptions options = OpenAiAudioSpeechOptions.builder()
+                .model("tts-1") // tts-1, tts-1-hd
+                .voice("echo") // alloy, echo, fable, onyx, nova, shimmer
+                .build();
 
-            String fileId = UUID.randomUUID().toString();
-            String storedFileName = fileId + "_" + file.getOriginalFilename();
-            Path targetPath = AUDIO_DIR.resolve(storedFileName);
+        // 2. create prompt
+        SpeechPrompt prompt = new SpeechPrompt(text, options);
 
-            Files.copy(file.getInputStream(), targetPath);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("fileId", fileId);
-            response.put("originalFilename", file.getOriginalFilename());
-            response.put("storedFileName", storedFileName);
-            response.put("contentType", file.getContentType());
-            response.put("size", file.getSize());
-            return response;
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store audio file", e);
-        }
+        // 3. call LLM
+        SpeechResponse response = speechModel.call(prompt);
+        return response.getResult().getOutput();
     }
 }
