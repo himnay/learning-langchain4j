@@ -3,6 +3,7 @@ package com.infiproton.springaidemo.service;
 import com.infiproton.springaidemo.tool.ContactsTool;
 import com.infiproton.springaidemo.tool.WeatherTools;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
@@ -19,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
@@ -61,7 +63,15 @@ public class ChatService {
                 .advisors(new QuestionAnswerAdvisor(vectorStore))
                 .tools(weatherTools, contactsTool)
                 .stream()
-                .content();
+                .content()
+                .doOnNext(s -> log.info("s : {}", s))
+                .doOnComplete(() -> log.info("Data complete"))
+                .onErrorResume(throwable -> {
+                    log.error("Error occurred in the stream", throwable);
+                    return Flux.error(new RuntimeException(
+                            "Error occurred in the stream: %s"
+                                    .formatted(throwable.getMessage())));
+                });
     }
 
 }
