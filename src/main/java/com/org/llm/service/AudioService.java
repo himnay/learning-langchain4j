@@ -1,6 +1,7 @@
 package com.org.llm.service;
 
 import com.openai.models.audio.AudioResponseFormat;
+import com.org.llm.model.StoredAudio;
 import lombok.AllArgsConstructor;
 import org.springframework.ai.audio.transcription.AudioTranscriptionOptions;
 import org.springframework.ai.audio.transcription.AudioTranscriptionPrompt;
@@ -17,10 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -32,70 +33,58 @@ public class AudioService {
     private final OpenAiAudioTranscriptionModel transcriptionModel;
     private final OpenAiAudioSpeechModel speechModel;
 
-    public Map<String, Object> store(MultipartFile file) {
+    public StoredAudio store(MultipartFile file) {
         try {
             Files.createDirectories(AUDIO_DIR);
 
             String fileId = UUID.randomUUID().toString();
-            String storedFileName = fileId + "_" + file.getOriginalFilename();
+            // keep only the last path segment of the client-supplied name — prevents path traversal
+            String safeName = Path.of(Objects.requireNonNullElse(file.getOriginalFilename(), "audio"))
+                    .getFileName().toString();
+            String storedFileName = fileId + "_" + safeName;
             Path targetPath = AUDIO_DIR.resolve(storedFileName);
 
             Files.copy(file.getInputStream(), targetPath);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("fileId", fileId);
-            response.put("originalFilename", file.getOriginalFilename());
-            response.put("storedFileName", storedFileName);
-            response.put("contentType", file.getContentType());
-            response.put("size", file.getSize());
-            return response;
+            return new StoredAudio(fileId, file.getOriginalFilename(), storedFileName,
+                    file.getContentType(), file.getSize());
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store audio file", e);
+            throw new UncheckedIOException("Failed to store audio file", e);
         }
     }
 
     public String speechToText(String storedFileName) {
+        byte[] audioBytes;
         try {
-            // 1. convert the stored file into Resource
-            Path audioPath = AUDIO_DIR.resolve(storedFileName);
-            byte[] audioBytes = Files.readAllBytes(audioPath);
-            Resource audio = new ByteArrayResource(audioBytes) {
-                @Override
-                public String getFilename() {
-                    return storedFileName;
-                }
-            };
-
-            // 2. Prepare transcription options
-            AudioTranscriptionOptions options = OpenAiAudioTranscriptionOptions.builder()
-                    .model("whisper-1")
-                    .responseFormat(AudioResponseFormat.JSON)
-                    .build();
-
-            // 3. build the prompt
-            AudioTranscriptionPrompt prompt = new AudioTranscriptionPrompt(audio, options);
-
-            // 4. call transcription model
-            AudioTranscriptionResponse response = transcriptionModel.call(prompt);
-            return response.getResult().getOutput();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to transcribe audio", e);
+            audioBytes = Files.readAllBytes(AUDIO_DIR.resolve(storedFileName));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read stored audio file: " + storedFileName, e);
         }
+        Resource audio = new ByteArrayResource(audioBytes) {
+            @Override
+            public String getFilename() {
+                return storedFileName;
+            }
+        };
+
+        AudioTranscriptionOptions options = OpenAiAudioTranscriptionOptions.builder()
+                .model("whisper-1")
+                .responseFormat(AudioResponseFormat.JSON)
+                .build();
+
+        AudioTranscriptionPrompt prompt = new AudioTranscriptionPrompt(audio, options);
+        AudioTranscriptionResponse response = transcriptionModel.call(prompt);
+        return response.getResult().getOutput();
     }
 
     public byte[] textToSpeech(String text) {
-        // 1. define options
         OpenAiAudioSpeechOptions options = OpenAiAudioSpeechOptions.builder()
                 .model("tts-1") // tts-1, tts-1-hd
                 .voice("echo") // alloy, echo, fable, onyx, nova, shimmer
                 .build();
 
-        // 2. create prompt
         TextToSpeechPrompt prompt = new TextToSpeechPrompt(text, options);
-
-        // 3. call LLM
         TextToSpeechResponse response = speechModel.call(prompt);
         return response.getResult().getOutput();
     }

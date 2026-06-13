@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -44,10 +45,16 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Malformed request", "Request body is missing or not valid JSON", null);
     }
 
-    /** Bad arguments — e.g. unsupported audio type, disallowed SQL, unknown model output. */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
-        return build(HttpStatus.BAD_REQUEST, "Bad request", ex.getMessage(), null);
+    /** Audio file validation failures — empty file, unsupported content type. */
+    @ExceptionHandler(AudioValidationException.class)
+    public ResponseEntity<ApiError> handleAudioValidation(AudioValidationException ex) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid audio", ex.getMessage(), null);
+    }
+
+    /** SQL validation failures — disallowed statements, unknown tables, unsafe keywords. */
+    @ExceptionHandler(SqlValidationException.class)
+    public ResponseEntity<ApiError> handleSqlValidation(SqlValidationException ex) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid SQL", ex.getMessage(), null);
     }
 
     /** Upload exceeded the configured multipart limit. */
@@ -58,8 +65,8 @@ public class GlobalExceptionHandler {
     }
 
     /** File / IO failures (PDF reading, audio handling). */
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<ApiError> handleIo(IOException ex) {
+    @ExceptionHandler({IOException.class, UncheckedIOException.class})
+    public ResponseEntity<ApiError> handleIo(Exception ex) {
         log.error("IO error handling request", ex);
         return build(HttpStatus.BAD_GATEWAY, "IO error", ex.getMessage(), null);
     }

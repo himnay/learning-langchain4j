@@ -1,5 +1,6 @@
 package com.org.llm.controller;
 
+import com.org.llm.model.StoredAudio;
 import com.org.llm.service.AudioService;
 import com.org.llm.validation.AudioValidator;
 import jakarta.validation.constraints.NotBlank;
@@ -24,7 +25,7 @@ class AudioController {
     private final AudioValidator audioValidator;
 
     @PostMapping("/upload")
-    public ResponseEntity<Map<String, Object>> uploadAudio(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<StoredAudio> uploadAudio(@RequestParam("file") MultipartFile file) {
         audioValidator.validate(file);
         return ResponseEntity.ok(audioService.store(file));
     }
@@ -41,8 +42,7 @@ class AudioController {
     @PostMapping("/to-text")
     public ResponseEntity<Map<String, Object>> speechToText(@RequestParam("file") MultipartFile file) {
         audioValidator.validate(file);
-        Map<String, Object> uploadResult = audioService.store(file);
-        String storedFileName = (String) uploadResult.get("storedFileName");
-        return ResponseEntity.ok(Map.of("text", audioService.speechToText(storedFileName)));
+        StoredAudio stored = audioService.store(file);
+        return ResponseEntity.ok(Map.of("text", audioService.speechToText(stored.storedFileName())));
     }
 }

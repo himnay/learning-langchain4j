@@ -1,5 +1,6 @@
 package com.org.llm.validation;
 
+import com.org.llm.exception.SqlValidationException;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashSet;
@@ -23,9 +24,14 @@ public class SqlValidator {
     private static final Pattern LIMIT_PATTERN = Pattern.compile("(?i)\\blimit\\s+\\d+");
     private static final Pattern COUNT_PATTERN = Pattern.compile("(?i)^\\s*select\\s+count\\s*\\(");
 
+    /** Full guard pipeline: strip fences/semicolons, enforce read-only allow-listed SQL, cap rows. */
+    public String prepare(String rawSql, int maxRows) {
+        return enforceLimit(validateReadOnly(sanitize(rawSql)), maxRows);
+    }
+
     public String sanitize(String sql) {
         if (sql == null || sql.isBlank()) {
-            throw new IllegalArgumentException("model did not return SQL");
+            throw new SqlValidationException("model did not return SQL");
         }
         String cleaned = sql
                 .replace("```sql", "")
@@ -37,22 +43,22 @@ public class SqlValidator {
     public String validateReadOnly(String sql) {
         String lower = sql.trim().toLowerCase();
         if (!(lower.startsWith("select") || lower.startsWith("with"))) {
-            throw new IllegalArgumentException("only SELECT queries are allowed");
+            throw new SqlValidationException("only SELECT queries are allowed");
         }
         if (FORBIDDEN_PATTERN.matcher(sql).find()) {
-            throw new IllegalArgumentException("unsafe SQL keyword found");
+            throw new SqlValidationException("unsafe SQL keyword found");
         }
         if (sql.contains(";")) {
-            throw new IllegalArgumentException("multiple statements are not allowed");
+            throw new SqlValidationException("multiple statements are not allowed");
         }
 
         Set<String> referencedTables = extractTables(sql);
         if (referencedTables.isEmpty()) {
-            throw new IllegalArgumentException("no table reference found");
+            throw new SqlValidationException("no table reference found");
         }
         for (String table : referencedTables) {
             if (!ALLOWED_TABLES.contains(table)) {
-                throw new IllegalArgumentException("table not allowed: " + table);
+                throw new SqlValidationException("table not allowed: " + table);
             }
         }
         return sql;

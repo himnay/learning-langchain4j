@@ -2,9 +2,9 @@ package com.org.llm.controller;
 
 import com.org.llm.model.ChatRequest;
 import com.org.llm.model.TravelPlan;
-import com.org.llm.service.AudioService;
 import com.org.llm.service.ChatService;
 import com.org.llm.service.TravelGuideService;
+import com.org.llm.service.VoiceChatService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ class ChatController {
 
     private final ChatService chatService;
     private final TravelGuideService travelGuideService;
-    private final AudioService audioService;
+    private final VoiceChatService voiceChatService;
     private final ChatMemory chatMemory;
 
     @PostMapping
@@ -38,29 +38,20 @@ class ChatController {
 
     @PostMapping("/audio/voice")
     public ResponseEntity<byte[]> voiceChat(@RequestParam("file") MultipartFile file) {
-        Map<String, Object> uploadResult = audioService.store(file);
-        String storedFileName = (String) uploadResult.get("storedFileName");
-
-        String transcript = audioService.speechToText(storedFileName);
-        String aiResponse = chatService.chat(null, transcript);
-        byte[] audioResponse = audioService.textToSpeech(aiResponse);
+        VoiceChatService.VoiceExchange exchange = voiceChatService.exchange(file);
+        byte[] audioResponse = voiceChatService.speak(exchange.aiResponse());
 
         return ResponseEntity.ok()
                 .header("Content-Type", "audio/mpeg")
-                .header("X-Transcript", transcript)
-                .header("X-AI-Response", aiResponse)
+                .header("X-Transcript", exchange.transcript())
+                .header("X-AI-Response", exchange.aiResponse())
                 .body(audioResponse);
     }
 
     @PostMapping("/audio")
     public Map<String, Object> chatWithAudio(@RequestParam("file") MultipartFile file) {
-        Map<String, Object> uploadResult = audioService.store(file);
-        String storedFileName = (String) uploadResult.get("storedFileName");
-
-        String transcript = audioService.speechToText(storedFileName);
-        String aiResponse = chatService.chat(null, transcript);
-
-        return Map.of("transcript", transcript, "aiResponse", aiResponse);
+        VoiceChatService.VoiceExchange exchange = voiceChatService.exchange(file);
+        return Map.of("transcript", exchange.transcript(), "aiResponse", exchange.aiResponse());
     }
 
     @GetMapping("/travel-guide")

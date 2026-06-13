@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:18
-    container_name: llm-chat-postgres
+    container_name: llm-postgres
     environment:
       POSTGRES_DB: llm_chat
       POSTGRES_USER: postgres

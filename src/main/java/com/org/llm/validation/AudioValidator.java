@@ -1,5 +1,6 @@
 package com.org.llm.validation;
 
+import com.org.llm.exception.AudioValidationException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,11 +22,11 @@ public class AudioValidator {
 
     public void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("audio file must not be empty");
+            throw new AudioValidationException("audio file must not be empty");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new IllegalArgumentException(
+            throw new AudioValidationException(
                     "unsupported audio type: " + contentType + ". Allowed: " + ALLOWED_CONTENT_TYPES
             );
         }

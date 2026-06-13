@@ -14,14 +14,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class StartupValidator implements ApplicationRunner {
 
-    @Value("${spring.ai.openai.api-key:}")
-    private String openAiApiKey;
+    private final String openAiApiKey;
+    private final String stabilityApiKey;
+    private final boolean authEnabled;
 
-    @Value("${spring.ai.stabilityai.api-key:}")
-    private String stabilityApiKey;
-
-    @Value("${app.security.auth-enabled:true}")
-    private boolean authEnabled;
+    public StartupValidator(@Value("${spring.ai.openai.api-key:}") String openAiApiKey,
+                            @Value("${spring.ai.stabilityai.api-key:}") String stabilityApiKey,
+                            @Value("${app.security.auth-enabled:true}") boolean authEnabled) {
+        this.openAiApiKey = openAiApiKey;
+        this.stabilityApiKey = stabilityApiKey;
+        this.authEnabled = authEnabled;
+    }
 
     @Override
     public void run(ApplicationArguments args) {

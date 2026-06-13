@@ -23,7 +23,7 @@ public class TextToSqlService {
         int maxRows = normalizeMaxRows(request.maxRows());
         String schemaContext = schemaContext();
         String generatedSql = generateSql(request.question(), schemaContext, maxRows);
-        String executableSql = sqlValidator.enforceLimit(sqlValidator.validateReadOnly(sqlValidator.sanitize(generatedSql)), maxRows);
+        String executableSql = sqlValidator.prepare(generatedSql, maxRows);
 
         boolean repaired = false;
         List<Map<String, Object>> rows = List.of();
@@ -33,8 +33,8 @@ public class TextToSqlService {
                 rows = jdbcTemplate.queryForList(executableSql);
             } catch (BadSqlGrammarException ex) {
                 repaired = true;
-                String fixedSql = sqlValidator.sanitize(repairSql(request.question(), executableSql, ex.getMessage(), schemaContext, maxRows));
-                executableSql = sqlValidator.enforceLimit(sqlValidator.validateReadOnly(fixedSql), maxRows);
+                String fixedSql = repairSql(request.question(), executableSql, ex.getMessage(), schemaContext, maxRows);
+                executableSql = sqlValidator.prepare(fixedSql, maxRows);
                 rows = jdbcTemplate.queryForList(executableSql);
             }
         }

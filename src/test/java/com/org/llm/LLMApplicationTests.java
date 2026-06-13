@@ -3,6 +3,7 @@ package com.org.llm;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(properties = {
@@ -11,6 +12,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
         "spring.ai.openai.api-key=test-key",
         "spring.ai.stabilityai.api-key=test-key"
 })
+@Import(TestcontainersConfiguration.class)
 class LLMApplicationTests {
 
     @MockitoBean
