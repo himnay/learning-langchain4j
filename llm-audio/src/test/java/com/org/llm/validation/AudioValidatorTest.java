@@ -1,6 +1,7 @@
 package com.org.llm.validation;
 
 import com.org.llm.exception.AudioValidationException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -11,18 +12,21 @@ class AudioValidatorTest {
 
     private final AudioValidator validator = new AudioValidator();
 
+    @DisplayName("Accepts a supported audio content type")
     @Test
     void acceptsSupportedAudioType() {
         MockMultipartFile file = new MockMultipartFile("file", "clip.mp3", "audio/mpeg", new byte[]{1});
         assertThatCode(() -> validator.validate(file)).doesNotThrowAnyException();
     }
 
+    @DisplayName("Rejects an empty audio file")
     @Test
     void rejectsEmptyFile() {
         MockMultipartFile file = new MockMultipartFile("file", "clip.mp3", "audio/mpeg", new byte[0]);
         assertThatExceptionOfType(AudioValidationException.class).isThrownBy(() -> validator.validate(file));
     }
 
+    @DisplayName("Rejects a file with an unsupported content type")
     @Test
     void rejectsUnsupportedContentType() {
         MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[]{1});
