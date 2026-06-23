@@ -1,5 +1,6 @@
 package com.org.llm.rag;
 
+import com.org.llm.exception.ValidationException;
 import com.org.llm.model.QueryTransformRequest;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +24,9 @@ public class QueryTransformationService {
     }
 
     public List<String> transform(QueryTransformRequest request) {
-        QueryTransformationStrategy strategy = strategiesByTechnique.get(request.technique());
+        QueryTransformationStrategy strategy = strategiesByTechnique.get(request.getTechnique());
         if (strategy == null) {
-            throw new IllegalStateException("No strategy registered for technique: " + request.technique());
+            throw new ValidationException("No strategy registered for technique: " + request.getTechnique());
         }
         return strategy.transform(request);
     }

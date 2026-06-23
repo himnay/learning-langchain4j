@@ -1,0 +1,23 @@
+openapi: 3.0.3
+info:
+  title: llm-audio models
+  description: Schemas for llm-audio request/response DTOs generated as Java models via openapi-generator-maven-plugin.
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    StoredAudio:
+      type: object
+      description: Result of persisting an uploaded audio file to the local audio working directory.
+      properties:
+        fileId:
+          type: string
+        originalFilename:
+          type: string
+        storedFileName:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+          format: int64

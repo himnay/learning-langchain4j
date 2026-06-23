@@ -2,11 +2,13 @@ package com.org.llm.backend;
 
 import com.org.llm.assistant.ChatAssistant;
 import com.org.llm.config.RagProperties;
+import com.org.llm.exception.ChatProviderException;
 import com.org.llm.model.ChatAnswer;
 import com.org.llm.model.Citation;
 import com.org.llm.rag.RagFilterContext;
 import com.org.llm.rag.RetrievedContentContext;
 import com.org.llm.service.AnswerEvaluator;
+import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.store.embedding.filter.Filter;
 import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder;
@@ -49,7 +51,31 @@ public class LocalChatBackend implements ChatBackend {
     }
 
     private static List<Citation> toCitations(List<Content> retrieved) {
-        return retrieved.stream().map(Citation::from).toList();
+        return retrieved.stream().map(LocalChatBackend::toCitation).toList();
+    }
+
+    /**
+     * Builds a {@link Citation} from a retrieved content's metadata.
+     *
+     * <p>Citation used to expose this as a {@code Citation.from(Content)} static factory;
+     * openapi-generator-generated POJOs only carry getters/setters/constructors, not arbitrary
+     * static methods, so the logic is inlined here instead (its only caller). Fields mirror the
+     * metadata keys written by {@code com.org.llm.rag.DocumentIngestionRunner} into the Redis
+     * embedding store ({@code fileName}, {@code source}, {@code identity}); the chunk position
+     * comes from LangChain4j's own splitter-assigned {@code index} metadata key. {@code page} is
+     * always {@code null} today — {@code ApachePdfBoxDocumentParser} extracts whole-document text,
+     * not per-page, so there's no page number to carry (kept nullable rather than removed, in case
+     * a page-aware parser replaces it later).
+     */
+    private static Citation toCitation(Content content) {
+        Metadata metadata = content.textSegment().metadata();
+        return new Citation(
+                metadata.getString("fileName"),
+                metadata.getString("source"),
+                metadata.getString("identity"),
+                metadata.getInteger("index"),
+                metadata.getInteger("page_number")
+        );
     }
 
     @Override
@@ -58,7 +84,7 @@ public class LocalChatBackend implements ChatBackend {
         try {
             String answer = chatAssistant.chat(conversationId, systemPrompt, message);
             List<Content> documents = retrievedContentContext.get();
-            List<Citation> citations = documents.stream().map(Citation::from).toList();
+            List<Citation> citations = documents.stream().map(LocalChatBackend::toCitation).toList();
             Boolean faithful = evaluateFaithfulness(message, documents, answer, citations);
             return new ChatAnswer(answer, citations, faithful);
         } finally {
@@ -83,7 +109,7 @@ public class LocalChatBackend implements ChatBackend {
                 .doFinally(signal -> ragFilterContext.clear())
                 .onErrorResume(throwable -> {
                     log.error("Error occurred in the stream", throwable);
-                    return Flux.error(new IllegalStateException(
+                    return Flux.error(new ChatProviderException(
                             "Error occurred in the stream: %s".formatted(throwable.getMessage())));
                 });
     }

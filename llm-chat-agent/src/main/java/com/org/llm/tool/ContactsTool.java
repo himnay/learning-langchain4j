@@ -44,11 +44,11 @@ public class ContactsTool {
     public String formatAsCsv(@P("contacts to format") List<Contact> contacts) {
         StringBuilder sb = new StringBuilder("Name,Email,City\n");
         for (Contact c : contacts) {
-            sb.append(c.name())
+            sb.append(c.getName())
                     .append(",")
-                    .append(c.email())
+                    .append(c.getEmail())
                     .append(",")
-                    .append(c.city())
+                    .append(c.getCity())
                     .append("\n");
         }
         return sb.toString();

@@ -21,6 +21,9 @@ public class ModerationService {
     public ModerationCheckResult check(String text) {
         Response<Moderation> response = moderationModel.moderate(text);
         Moderation moderation = response.content();
-        return new ModerationCheckResult(moderation.flagged(), moderation.flaggedText());
+        return ModerationCheckResult.builder()
+                .flagged(moderation.flagged())
+                .flaggedText(moderation.flaggedText())
+                .build();
     }
 }

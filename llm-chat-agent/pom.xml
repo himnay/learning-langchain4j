@@ -16,6 +16,14 @@
 
     <dependencies>
         <dependency>
+            <!-- Pulled in unconditionally by the openapi-generator-maven-plugin "spring"
+                 generator's Java model templates (import org.openapitools.jackson.nullable.JsonNullable),
+                 even though chat-agent.yaml doesn't currently mark any property nullable: true. -->
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -178,6 +186,44 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.10.0</version>
+                <executions>
+                    <execution>
+                        <id>chat-agent-models</id>
+                        <goals><goal>generate</goal></goals>
+                        <configuration>
+                            <generatorName>spring</generatorName>
+                            <inputSpec>${project.basedir}/src/main/resources/contracts/chat-agent.yaml</inputSpec>
+                            <output>${project.build.directory}/generated-sources</output>
+                            <generateApis>false</generateApis>
+                            <generateApiTests>false</generateApiTests>
+                            <generateApiDocumentation>false</generateApiDocumentation>
+                            <generateModelTests>false</generateModelTests>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <modelPackage>com.org.llm.model</modelPackage>
+                            <schemaMappings>
+                                <schemaMapping>QueryTransformationTechnique=com.org.llm.rag.QueryTransformationTechnique</schemaMapping>
+                            </schemaMappings>
+                            <importMappings>
+                                <importMapping>com.org.llm.rag.QueryTransformationTechnique=com.org.llm.rag.QueryTransformationTechnique</importMapping>
+                            </importMappings>
+                            <configOptions>
+                                <useBeanValidation>true</useBeanValidation>
+                                <performBeanValidation>true</performBeanValidation>
+                                <java8>true</java8>
+                                <dateLibrary>java8</dateLibrary>
+                                <useJakartaEe>true</useJakartaEe>
+                                <booleanGetterPrefix>is</booleanGetterPrefix>
+                                <generateConstructorWithAllArgs>true</generateConstructorWithAllArgs>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

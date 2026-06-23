@@ -3,6 +3,7 @@ package com.org.llm.client;
 import com.org.llm.client.dto.ChatAgentChatRequest;
 import com.org.llm.client.dto.ChatAgentChatResponse;
 import com.org.llm.config.ChatAgentProperties;
+import com.org.llm.exception.UpstreamServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -36,7 +37,7 @@ public class ChatAgentClient {
                 .block(timeout());
 
         if (response == null || response.answer() == null) {
-            throw new IllegalStateException("llm-chat-agent returned no answer");
+            throw new UpstreamServiceException("llm-chat-agent returned no answer");
         }
         return response.answer();
     }

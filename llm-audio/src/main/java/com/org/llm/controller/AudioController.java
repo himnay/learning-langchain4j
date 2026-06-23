@@ -49,6 +49,6 @@ class AudioController {
     public ResponseEntity<Map<String, Object>> speechToText(@RequestParam("file") MultipartFile file) {
         audioValidator.validate(file);
         StoredAudio stored = audioService.store(file);
-        return ResponseEntity.ok(Map.of("text", audioService.speechToText(stored.storedFileName())));
+        return ResponseEntity.ok(Map.of("text", audioService.speechToText(stored.getStoredFileName())));
     }
 }

@@ -40,7 +40,7 @@ class RewriteQueryStrategy implements QueryTransformationStrategy {
                 the rewritten query — no markdown, no explanation.
                 
                 Query: %s
-                """.formatted(TARGET_SEARCH_SYSTEM, request.query());
+                """.formatted(TARGET_SEARCH_SYSTEM, request.getQuery());
         return List.of(ragChatModel.chat(prompt).trim());
     }
 }

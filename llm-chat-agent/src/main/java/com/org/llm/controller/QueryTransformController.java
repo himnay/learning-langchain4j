@@ -27,8 +27,8 @@ class QueryTransformController {
     @PostMapping("/query-transform")
     public QueryTransformResponse transform(@Valid @RequestBody QueryTransformRequest request) {
         return new QueryTransformResponse(
-                request.technique(),
-                request.query(),
+                request.getTechnique(),
+                request.getQuery(),
                 queryTransformationService.transform(request));
     }
 }

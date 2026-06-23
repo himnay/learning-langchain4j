@@ -3,6 +3,7 @@ package com.org.llm.client;
 import com.org.llm.client.dto.GatewayChatRequest;
 import com.org.llm.client.dto.GatewayChatResponse;
 import com.org.llm.config.GatewayProperties;
+import com.org.llm.exception.ChatProviderException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -69,16 +70,16 @@ public class GatewayClient {
                 .bodyToFlux(String.class)
                 .onErrorResume(ex -> {
                     log.error("GATEWAY | stream failed | {}", ex.getMessage());
-                    return Flux.error(new IllegalStateException("Gateway stream failed: " + ex.getMessage()));
+                    return Flux.error(new ChatProviderException("Gateway stream failed: " + ex.getMessage()));
                 });
     }
 
     private String extractText(GatewayChatResponse response) {
         if (response == null) {
-            throw new IllegalStateException("Gateway returned no response");
+            throw new ChatProviderException("Gateway returned no response");
         }
         if (response.error() != null) {
-            throw new IllegalStateException("Gateway error: " + response.error());
+            throw new ChatProviderException("Gateway error: " + response.error());
         }
         return response.text();
     }

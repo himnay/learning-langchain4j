@@ -1,0 +1,345 @@
+openapi: 3.0.3
+info:
+  title: llm-chat-agent models
+  description: >
+    Model-only OpenAPI contract used purely to drive openapi-generator-maven-plugin
+    code generation for com.org.llm.model. No paths are defined; only
+    components.schemas matter here. Each schema name matches an existing
+    hand-written Java record 1:1 so the generated class is a drop-in
+    replacement (same package, same class name, same constructor argument
+    order).
+  version: "1.0.0"
+paths: {}
+components:
+  schemas:
+
+    # ---------------------------------------------------------------------
+    # ChatRequest — request body for ChatController#chat / #streamChat
+    # ---------------------------------------------------------------------
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        conversationId:
+          type: string
+        message:
+          type: string
+          minLength: 1
+          # NOTE (fidelity loss): original record uses
+          # @NotBlank(message = "message is required"). Bean-validation
+          # codegen from `required` + `minLength: 1` produces the default
+          # Jakarta messages ({jakarta.validation.constraints.NotBlank.message}
+          # / a generic "size must be between ... " message for @Size),
+          # not the custom literal "message is required".
+        documentSource:
+          type: string
+          description: >
+            When set, scopes RAG retrieval to the document whose fileName
+            metadata matches this value.
+
+    # ---------------------------------------------------------------------
+    # Citation — nested in ChatAnswer
+    # ---------------------------------------------------------------------
+    Citation:
+      type: object
+      properties:
+        fileName:
+          type: string
+        source:
+          type: string
+        identity:
+          type: string
+        chunkIndex:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+          # NOTE: not marked `nullable: true` deliberately — with
+          # useBeanValidation/performBeanValidation, openapi-generator's Java
+          # codegen wraps `nullable: true` optional properties in
+          # org.openapitools.jackson.nullable.JsonNullable<T> (tri-state:
+          # absent vs explicit null vs value) instead of leaving them a plain
+          # nullable wrapper type. That would turn getPage() into
+          # JsonNullable<Integer> instead of plain Integer, breaking the
+          # "drop-in getter" goal. Omitting `nullable` and simply leaving the
+          # property out of `required` is sufficient: optional properties on
+          # object schemas already generate as nullable wrapper types
+          # (Integer/Boolean, not int/boolean) with no JsonNullable wrapping.
+
+    # ---------------------------------------------------------------------
+    # ChatAnswer — response body for ChatController#chat
+    # ---------------------------------------------------------------------
+    ChatAnswer:
+      type: object
+      properties:
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        faithful:
+          type: boolean
+
+    # ---------------------------------------------------------------------
+    # Contact — nested in TravelPlan-adjacent flows (used by RecipeController
+    # context elsewhere in the prompts/tools layer)
+    # ---------------------------------------------------------------------
+    Contact:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        city:
+          type: string
+
+    # ---------------------------------------------------------------------
+    # DayPlan — nested in TravelPlan
+    # ---------------------------------------------------------------------
+    DayPlan:
+      type: object
+      required:
+        - day
+        - activities
+        - food
+        - budget
+      properties:
+        day:
+          type: integer
+          format: int32
+        activities:
+          type: string
+        food:
+          type: string
+        budget:
+          type: number
+          format: float
+
+    # ---------------------------------------------------------------------
+    # TravelPlan — response body (RecipeController / travel-plan flow)
+    # ---------------------------------------------------------------------
+    TravelPlan:
+      type: object
+      required:
+        - days
+      properties:
+        city:
+          type: string
+        days:
+          type: integer
+          format: int32
+        itinerary:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayPlan'
+
+    # ---------------------------------------------------------------------
+    # FileReadRequest — request body for FileRestController#caption
+    # ---------------------------------------------------------------------
+    FileReadRequest:
+      type: object
+      required:
+        - fileName
+        - message
+      properties:
+        fileName:
+          type: string
+          minLength: 1
+          # NOTE (fidelity loss): original @NotBlank(message = "fileName is required")
+          # custom message is not reproducible via standard required/minLength codegen;
+          # generated validation falls back to the default Jakarta NotBlank message.
+        message:
+          type: string
+          minLength: 1
+          # NOTE (fidelity loss): original @NotBlank(message = "message is required")
+          # custom message likewise not reproducible.
+
+    # ---------------------------------------------------------------------
+    # ForecastResponse + nested Forecast/ForecastDay/Day/Condition
+    # (weather tool-call payload, deserialized from an external API).
+    # Each carries x-class-extra-annotation to reproduce the original
+    # records' @JsonIgnoreProperties(ignoreUnknown = true) (the external
+    # WeatherAPI payload has many more fields than these DTOs model).
+    # NOTE: these were originally *nested* static records inside
+    # ForecastResponse (ForecastResponse.Forecast, .ForecastDay, .Day,
+    # .Condition); openapi-generator only emits top-level classes, so they
+    # become plain com.org.llm.model.Forecast / ForecastDay / Day /
+    # Condition. The one call site using the nested-qualified name
+    # (WeatherTools.java: ForecastResponse.ForecastDay) is rewritten to the
+    # unqualified ForecastDay accordingly.
+    # ---------------------------------------------------------------------
+    Condition:
+      type: object
+      x-class-extra-annotation: "@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)"
+      properties:
+        text:
+          type: string
+
+    Day:
+      type: object
+      x-class-extra-annotation: "@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)"
+      properties:
+        avgtemp_c:
+          # snake_case on the wire (matches WeatherAPI's actual JSON key);
+          # openapi-generator's Java codegen turns this into camelCase field
+          # `avgtempC` with @JsonProperty("avgtemp_c") automatically, matching
+          # the original record's @JsonProperty("avgtemp_c") double avgtempC.
+          type: number
+          format: double
+        condition:
+          $ref: '#/components/schemas/Condition'
+
+    ForecastDay:
+      type: object
+      x-class-extra-annotation: "@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)"
+      properties:
+        day:
+          $ref: '#/components/schemas/Day'
+
+    Forecast:
+      type: object
+      x-class-extra-annotation: "@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)"
+      properties:
+        forecastday:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForecastDay'
+
+    ForecastResponse:
+      type: object
+      x-class-extra-annotation: "@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)"
+      properties:
+        forecast:
+          $ref: '#/components/schemas/Forecast'
+
+    # ---------------------------------------------------------------------
+    # QueryTransformationTechnique — used by QueryTransformRequest/Response.
+    # This schema exists only so $ref resolution gives the property the type
+    # name "QueryTransformationTechnique"; the pom.xml's schemaMappings /
+    # importMappings configOptions redirect that name to the REAL existing
+    # enum com.org.llm.rag.QueryTransformationTechnique (it's a Strategy-
+    # pattern discriminator used as a Map key elsewhere in the codebase, so
+    # it must stay that exact class, not a generated duplicate).
+    # ---------------------------------------------------------------------
+    QueryTransformationTechnique:
+      type: string
+      enum:
+        - REWRITE
+        - TRANSLATE
+        - COMPRESS
+        - MULTI_QUERY_EXPAND
+
+    # ---------------------------------------------------------------------
+    # QueryTransformRequest — request body for QueryTransformController#transform
+    # ---------------------------------------------------------------------
+    QueryTransformRequest:
+      type: object
+      required:
+        - technique
+        - query
+      properties:
+        technique:
+          $ref: '#/components/schemas/QueryTransformationTechnique'
+          # NOTE (fidelity loss): original @NotNull(message = "technique is required")
+          # custom message not reproducible; `required` alone yields the default
+          # "must not be null" / deserialization-error message instead.
+        query:
+          type: string
+          minLength: 1
+          # NOTE (fidelity loss): original @NotBlank(message = "query is required")
+          # custom message not reproducible.
+        history:
+          type: array
+          items:
+            type: string
+          description: >
+            Alternating prior turns, oldest first, starting with the user.
+            Only read when technique = COMPRESS.
+        targetLanguage:
+          type: string
+          description: >
+            Only read when technique = TRANSLATE; defaults to English.
+
+    # ---------------------------------------------------------------------
+    # QueryTransformResponse — response body for QueryTransformController#transform
+    # ---------------------------------------------------------------------
+    QueryTransformResponse:
+      type: object
+      properties:
+        technique:
+          $ref: '#/components/schemas/QueryTransformationTechnique'
+        originalQuery:
+          type: string
+        transformedQueries:
+          type: array
+          items:
+            type: string
+
+    # ---------------------------------------------------------------------
+    # TextToSqlRequest — request body for TextToSqlController#textToSql
+    # ---------------------------------------------------------------------
+    TextToSqlRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          minLength: 1
+          # NOTE (fidelity loss): original @NotBlank(message = "question is required")
+          # custom message not reproducible.
+        maxRows:
+          type: integer
+          format: int32
+        includeExplanation:
+          type: boolean
+        dryRun:
+          type: boolean
+
+    # ---------------------------------------------------------------------
+    # TextToSqlResponse — response body for TextToSqlController#textToSql
+    # ---------------------------------------------------------------------
+    TextToSqlResponse:
+      type: object
+      required:
+        - repaired
+        - dryRun
+        - rowCount
+      properties:
+        question:
+          type: string
+        sql:
+          type: string
+        repaired:
+          type: boolean
+        dryRun:
+          type: boolean
+        rowCount:
+          type: integer
+          format: int32
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        explanation:
+          type: string
+
+    # ---------------------------------------------------------------------
+    # WeatherResult — weather tool-call result
+    # ---------------------------------------------------------------------
+    WeatherResult:
+      type: object
+      properties:
+        city:
+          type: string
+        date:
+          type: string
+        temperature:
+          type: string
+        condition:
+          type: string

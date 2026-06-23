@@ -1,5 +1,6 @@
 package com.org.llm.security;
 
+import com.org.llm.exception.SecurityConfigurationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -30,7 +31,7 @@ public class ApiKeyService {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(md.digest(input.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 unavailable", e);
+            throw new SecurityConfigurationException("SHA-256 unavailable", e);
         }
     }
 

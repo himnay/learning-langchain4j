@@ -1,0 +1,19 @@
+openapi: 3.0.3
+info:
+  title: llm-image models
+  version: "1.0"
+paths: {}
+components:
+  schemas:
+    ImageCaptionRequest:
+      type: object
+      required:
+        - imageName
+        - message
+      properties:
+        imageName:
+          type: string
+          minLength: 1
+        message:
+          type: string
+          minLength: 1

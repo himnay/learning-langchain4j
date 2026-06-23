@@ -20,35 +20,35 @@ public class TextToSqlService {
     private final SqlValidator sqlValidator;
 
     public TextToSqlResponse process(TextToSqlRequest request) {
-        int maxRows = normalizeMaxRows(request.maxRows());
+        int maxRows = normalizeMaxRows(request.getMaxRows());
         String schemaContext = schemaContext();
-        String generatedSql = generateSql(request.question(), schemaContext, maxRows);
+        String generatedSql = generateSql(request.getQuestion(), schemaContext, maxRows);
         String executableSql = sqlValidator.prepare(generatedSql, maxRows);
 
         boolean repaired = false;
         List<Map<String, Object>> rows = List.of();
 
-        if (!Boolean.TRUE.equals(request.dryRun())) {
+        if (!Boolean.TRUE.equals(request.isDryRun())) {
             try {
                 rows = jdbcTemplate.queryForList(executableSql);
             } catch (BadSqlGrammarException ex) {
                 repaired = true;
-                String fixedSql = repairSql(request.question(), executableSql, ex.getMessage(), schemaContext, maxRows);
+                String fixedSql = repairSql(request.getQuestion(), executableSql, ex.getMessage(), schemaContext, maxRows);
                 executableSql = sqlValidator.prepare(fixedSql, maxRows);
                 rows = jdbcTemplate.queryForList(executableSql);
             }
         }
 
         String explanation = null;
-        if (Boolean.TRUE.equals(request.includeExplanation())) {
-            explanation = explainSql(request.question(), executableSql);
+        if (Boolean.TRUE.equals(request.isIncludeExplanation())) {
+            explanation = explainSql(request.getQuestion(), executableSql);
         }
 
         return new TextToSqlResponse(
-                request.question(),
+                request.getQuestion(),
                 executableSql,
                 repaired,
-                Boolean.TRUE.equals(request.dryRun()),
+                Boolean.TRUE.equals(request.isDryRun()),
                 rows.size(),
                 rows,
                 explanation

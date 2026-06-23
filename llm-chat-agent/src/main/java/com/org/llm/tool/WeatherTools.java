@@ -1,5 +1,6 @@
 package com.org.llm.tool;
 
+import com.org.llm.model.ForecastDay;
 import com.org.llm.model.ForecastResponse;
 import com.org.llm.model.WeatherResult;
 import dev.langchain4j.agent.tool.P;
@@ -38,10 +39,10 @@ public class WeatherTools {
             }
 
             // Extract forecast
-            ForecastResponse.ForecastDay forecastDay = apiResponse.forecast().forecastday().get(0);
+            ForecastDay forecastDay = apiResponse.getForecast().getForecastday().get(0);
 
-            String condition = forecastDay.day().condition().text();
-            double tempC = forecastDay.day().avgtempC();
+            String condition = forecastDay.getDay().getCondition().getText();
+            double tempC = forecastDay.getDay().getAvgtempC();
             return new WeatherResult(city, date, tempC + " °C", condition);
         } catch (Exception e) {
             log.error("Error fetching weather for {} on {}: {}", city, date, e.getMessage(), e);

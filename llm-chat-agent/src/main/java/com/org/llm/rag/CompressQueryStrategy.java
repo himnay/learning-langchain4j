@@ -41,12 +41,12 @@ class CompressQueryStrategy implements QueryTransformationStrategy {
 
     @Override
     public List<String> transform(QueryTransformRequest request) {
-        UserMessage currentMessage = UserMessage.from(request.query());
+        UserMessage currentMessage = UserMessage.from(request.getQuery());
         Metadata metadata = Metadata.builder()
                 .chatMessage(currentMessage)
-                .chatMemory(toHistory(request.history()))
+                .chatMemory(toHistory(request.getHistory()))
                 .build();
-        Query query = new Query(request.query(), metadata);
+        Query query = new Query(request.getQuery(), metadata);
         return compressingQueryTransformer.transform(query).stream().map(Query::text).toList();
     }
 }

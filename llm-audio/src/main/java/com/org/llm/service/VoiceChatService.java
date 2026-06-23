@@ -30,7 +30,7 @@ public class VoiceChatService {
     public VoiceExchange exchange(MultipartFile file) {
         audioValidator.validate(file);
         StoredAudio stored = audioService.store(file);
-        String transcript = audioService.speechToText(stored.storedFileName());
+        String transcript = audioService.speechToText(stored.getStoredFileName());
         String aiResponse = chat(transcript);
         return new VoiceExchange(transcript, aiResponse);
     }

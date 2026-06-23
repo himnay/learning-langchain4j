@@ -32,13 +32,13 @@ class TranslateQueryStrategy implements QueryTransformationStrategy {
 
     @Override
     public List<String> transform(QueryTransformRequest request) {
-        String targetLanguage = request.targetLanguage() != null ? request.targetLanguage() : DEFAULT_TARGET_LANGUAGE;
+        String targetLanguage = request.getTargetLanguage() != null ? request.getTargetLanguage() : DEFAULT_TARGET_LANGUAGE;
         String prompt = """
                 Translate the query below into %s. Return ONLY the translated query — no markdown,
                 no explanation, no quotes.
-                
+
                 Query: %s
-                """.formatted(targetLanguage, request.query());
+                """.formatted(targetLanguage, request.getQuery());
         return List.of(ragChatModel.chat(prompt).trim());
     }
 }

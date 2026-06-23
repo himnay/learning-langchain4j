@@ -24,7 +24,7 @@ class MultiQueryExpansionStrategy implements QueryTransformationStrategy {
 
     @Override
     public List<String> transform(QueryTransformRequest request) {
-        return expandingQueryTransformer.transform(Query.from(request.query())).stream()
+        return expandingQueryTransformer.transform(Query.from(request.getQuery())).stream()
                 .map(Query::text)
                 .toList();
     }

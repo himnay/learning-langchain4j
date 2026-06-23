@@ -77,6 +77,24 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_GATEWAY, "IO error", ex.getMessage(), null);
     }
 
+    /**
+     * Upstream chat provider (gateway or local LLM client) failures.
+     */
+    @ExceptionHandler(ChatProviderException.class)
+    public ResponseEntity<ApiError> handleChatProvider(ChatProviderException ex) {
+        log.error("Chat provider error", ex);
+        return build(HttpStatus.BAD_GATEWAY, "Chat provider error", ex.getMessage(), null);
+    }
+
+    /**
+     * Server-side security/environment misconfiguration (e.g. missing crypto algorithm).
+     */
+    @ExceptionHandler(SecurityConfigurationException.class)
+    public ResponseEntity<ApiError> handleSecurityConfiguration(SecurityConfigurationException ex) {
+        log.error("Security configuration error", ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Security configuration error", ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         log.error("Unhandled error", ex);

@@ -26,7 +26,7 @@ class ImageRestController {
     @Operation(summary = "Generate a text caption for a named image")
     @PostMapping("/caption")
     public String caption(@Validated @RequestBody ImageCaptionRequest request) {
-        return imageCaptionService.captionImage(request.imageName(), request.message());
+        return imageCaptionService.captionImage(request.getImageName(), request.getMessage());
     }
 
     @Operation(summary = "Generate a PNG image from a text prompt using Stability AI")

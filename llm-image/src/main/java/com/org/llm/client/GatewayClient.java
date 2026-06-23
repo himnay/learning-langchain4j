@@ -1,6 +1,7 @@
 package com.org.llm.client;
 
 import com.org.llm.client.dto.GatewayImageRequest;
+import com.org.llm.exception.UpstreamServiceException;
 import com.org.llm.client.dto.GatewayImageResponse;
 import com.org.llm.config.GatewayProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -40,12 +41,12 @@ public class GatewayClient {
                 .block(timeout());
 
         if (response == null || response.error() != null) {
-            throw new IllegalStateException("Gateway image generation failed: "
+            throw new UpstreamServiceException("Gateway image generation failed: "
                     + (response == null ? "no response" : response.error()));
         }
         List<String> images = response.images();
         if (images == null || images.isEmpty()) {
-            throw new IllegalStateException("Gateway returned no image");
+            throw new UpstreamServiceException("Gateway returned no image");
         }
         return Base64.getDecoder().decode(images.get(0));
     }

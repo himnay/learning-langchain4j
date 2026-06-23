@@ -71,7 +71,7 @@ class ChatController {
     @Operation(summary = "Send a chat message and receive a blocking response with RAG citations")
     @PostMapping
     public ChatAnswer chat(@Validated @RequestBody ChatRequest chatRequest) {
-        return chatService.chat(chatRequest.conversationId(), chatRequest.message(), chatRequest.documentSource());
+        return chatService.chat(chatRequest.getConversationId(), chatRequest.getMessage(), chatRequest.getDocumentSource());
     }
 
     @Operation(summary = "Generate a multi-day travel guide for a given city")
@@ -104,7 +104,7 @@ class ChatController {
     @CircuitBreaker(name = "llm-chat", fallbackMethod = "streamFallback")
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> streamChat(@Validated @RequestBody ChatRequest chatRequest) {
-        return chatService.streamChat(chatRequest.conversationId(), chatRequest.message(), chatRequest.documentSource());
+        return chatService.streamChat(chatRequest.getConversationId(), chatRequest.getMessage(), chatRequest.getDocumentSource());
     }
 
     @SuppressWarnings("unused")

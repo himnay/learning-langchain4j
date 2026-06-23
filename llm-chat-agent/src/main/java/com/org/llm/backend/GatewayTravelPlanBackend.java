@@ -1,6 +1,7 @@
 package com.org.llm.backend;
 
 import com.org.llm.client.GatewayClient;
+import com.org.llm.exception.ChatProviderException;
 import com.org.llm.model.TravelPlan;
 import dev.langchain4j.model.input.PromptTemplate;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +55,7 @@ public class GatewayTravelPlanBackend implements TravelPlanBackend {
         try {
             return objectMapper.readValue(stripFences(json), TravelPlan.class);
         } catch (Exception ex) {
-            throw new IllegalStateException("Gateway returned a travel plan that could not be parsed: "
+            throw new ChatProviderException("Gateway returned a travel plan that could not be parsed: "
                     + ex.getMessage());
         }
     }

@@ -22,6 +22,6 @@ class FileRestController {
     @Operation(summary = "Read a document file and answer a question about its content")
     @PostMapping("/read")
     public String caption(@Valid @RequestBody FileReadRequest request) {
-        return fileReadService.readFile(request.fileName(), request.message());
+        return fileReadService.readFile(request.getFileName(), request.getMessage());
     }
 }

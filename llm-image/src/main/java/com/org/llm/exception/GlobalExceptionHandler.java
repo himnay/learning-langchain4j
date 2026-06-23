@@ -69,6 +69,24 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_GATEWAY, "IO error", ex.getMessage(), null);
     }
 
+    /**
+     * Upstream provider/gateway returned an unusable or missing response.
+     */
+    @ExceptionHandler(UpstreamServiceException.class)
+    public ResponseEntity<ApiError> handleUpstream(UpstreamServiceException ex) {
+        log.error("Upstream service error", ex);
+        return build(HttpStatus.BAD_GATEWAY, "Upstream error", ex.getMessage(), null);
+    }
+
+    /**
+     * Internal/system-level failures (e.g. unavailable algorithm, misconfiguration).
+     */
+    @ExceptionHandler(InternalServiceException.class)
+    public ResponseEntity<ApiError> handleInternal(InternalServiceException ex) {
+        log.error("Internal service error", ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error", ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         log.error("Unhandled error", ex);

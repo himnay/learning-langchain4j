@@ -1,0 +1,52 @@
+openapi: 3.0.3
+info:
+  title: llm-playground models
+  description: >
+    Model-only OpenAPI contract used purely to drive openapi-generator-maven-plugin
+    code generation for com.org.llm.model. No paths are defined; only
+    components.schemas matter here. Each schema name matches an existing
+    hand-written Java record 1:1 so the generated class is a drop-in
+    replacement (same package, same class name, same constructor argument
+    order).
+
+    Only the genuinely REST-facing request/response types are modeled here:
+    TextRequest (request body for every PlaygroundController endpoint) and
+    ModerationCheckResult (response body for /moderate, built manually in
+    ModerationService — not a LangChain4j structured-output target).
+    ExtractedPerson and Sentiment are left as hand-written types because
+    LangChain4j's AiServices populates them directly via reflection /
+    structured-output parsing (ExtractionAssistant, ClassifierAssistant);
+    swapping them for generator output risks breaking that binding.
+  version: "1.0.0"
+paths: {}
+components:
+  schemas:
+
+    # ---------------------------------------------------------------------
+    # TextRequest — request body for every PlaygroundController endpoint
+    # ---------------------------------------------------------------------
+    TextRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          # NOTE (fidelity loss): original record uses
+          # @NotBlank(message = "text is required"). Bean-validation codegen
+          # from `required` + `minLength: 1` produces the default Jakarta
+          # messages ({jakarta.validation.constraints.NotBlank.message} /
+          # a generic size message), not the custom literal
+          # "text is required".
+
+    # ---------------------------------------------------------------------
+    # ModerationCheckResult — response body for PlaygroundController#moderate
+    # ---------------------------------------------------------------------
+    ModerationCheckResult:
+      type: object
+      properties:
+        flagged:
+          type: boolean
+        flaggedText:
+          type: string

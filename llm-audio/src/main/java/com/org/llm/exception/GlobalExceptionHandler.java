@@ -77,6 +77,24 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_GATEWAY, "IO error", ex.getMessage(), null);
     }
 
+    /**
+     * Downstream service (e.g. llm-chat-agent) returned an invalid or incomplete response.
+     */
+    @ExceptionHandler(UpstreamServiceException.class)
+    public ResponseEntity<ApiError> handleUpstreamService(UpstreamServiceException ex) {
+        log.error("Upstream service error", ex);
+        return build(HttpStatus.BAD_GATEWAY, "Upstream service error", ex.getMessage(), null);
+    }
+
+    /**
+     * Internal failures caused by the local runtime/environment (e.g. missing algorithm provider).
+     */
+    @ExceptionHandler(InternalServiceException.class)
+    public ResponseEntity<ApiError> handleInternalService(InternalServiceException ex) {
+        log.error("Internal service error", ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error", ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         log.error("Unhandled error", ex);

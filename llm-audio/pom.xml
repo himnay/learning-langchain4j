@@ -132,6 +132,11 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -159,5 +164,42 @@
          have llm-chat-agent's test depth yet. Coverage reports still generate (prepare-agent/
          report inherited from super-pom) — add a jacoco-check execution here (see
          llm-chat-agent/pom.xml) once the test suite catches up. -->
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.10.0</version>
+                <executions>
+                    <execution>
+                        <id>audio-models</id>
+                        <goals><goal>generate</goal></goals>
+                        <configuration>
+                            <generatorName>spring</generatorName>
+                            <inputSpec>${project.basedir}/src/main/resources/contracts/audio.yaml</inputSpec>
+                            <output>${project.build.directory}/generated-sources</output>
+                            <generateApis>false</generateApis>
+                            <generateApiTests>false</generateApiTests>
+                            <generateApiDocumentation>false</generateApiDocumentation>
+                            <generateModelTests>false</generateModelTests>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <modelPackage>com.org.llm.model</modelPackage>
+                            <configOptions>
+                                <useBeanValidation>true</useBeanValidation>
+                                <performBeanValidation>true</performBeanValidation>
+                                <java8>true</java8>
+                                <dateLibrary>java8</dateLibrary>
+                                <additionalModelTypeAnnotations>@lombok.Builder @lombok.NoArgsConstructor @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
+                                <useJakartaEe>true</useJakartaEe>
+                                <booleanGetterPrefix>is</booleanGetterPrefix>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

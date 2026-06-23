@@ -9,6 +9,8 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 /**
  * Routes chat through {@code llm-gateway} (it owns provider keys, guardrails, failover and
  * per-session memory keyed by the conversation id). The gateway has no RAG integration, so this
@@ -26,7 +28,11 @@ public class GatewayChatBackend implements ChatBackend {
     public ChatAnswer chat(String systemPrompt, String conversationId, String message, String documentSource) {
         log.info("CHAT | routing via gateway | session={}", conversationId);
         String answer = gatewayClient.chat(systemPrompt, message, conversationId);
-        return ChatAnswer.withoutRag(answer);
+        // ChatAnswer used to expose a withoutRag(String) static factory for this (no RAG
+        // integration here, so no citations/faithfulness verdict); openapi-generator-generated
+        // POJOs only carry getters/setters/constructors, not arbitrary static methods, so this is
+        // inlined at its one call site instead.
+        return new ChatAnswer(answer, List.of(), null);
     }
 
     @Override

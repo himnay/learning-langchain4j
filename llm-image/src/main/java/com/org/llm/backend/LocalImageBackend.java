@@ -1,5 +1,6 @@
 package com.org.llm.backend;
 
+import com.org.llm.exception.UpstreamServiceException;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.output.Response;
@@ -33,7 +34,7 @@ public class LocalImageBackend implements ImageBackend {
         Response<List<Image>> response = imageModel.generate(prompt, count);
         Image image = response.content().get(0);
         if (image.base64Data() == null) {
-            throw new IllegalStateException("OpenAI returned an image URL instead of base64 data: " + image.url());
+            throw new UpstreamServiceException("OpenAI returned an image URL instead of base64 data: " + image.url());
         }
         return Base64.getDecoder().decode(image.base64Data());
     }
