@@ -94,18 +94,20 @@ public class LocalChatBackend implements ChatBackend {
     }
 
     @Override
-    public Flux<ServerSentEvent<String>> stream(String conversationId, String message, String documentSource) {
-        ragFilterContext.set(documentFilter(documentSource));
+    public Flux<ServerSentEvent<String>> stream(String systemPrompt, String conversationId, String message, String documentSource) {
+        Filter filter = documentFilter(documentSource);
         // TokenStream#onRetrieved hands back exactly what this call retrieved, so citations no
         // longer need to be read back out of a shared context after the fact like Spring AI's
         // RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT did — they arrive as part of the stream.
-        return Flux.<ServerSentEvent<String>>create(sink ->
-                        chatAssistant.chatStream(conversationId, "", message)
+        return Flux.<ServerSentEvent<String>>create(sink -> {
+                        ragFilterContext.set(filter);
+                        chatAssistant.chatStream(conversationId, systemPrompt, message)
                                 .onPartialResponse(token -> sink.next(tokenEvent(token)))
                                 .onRetrieved(retrieved -> sink.next(citationsEvent(toCitations(retrieved))))
                                 .onCompleteResponse(response -> sink.complete())
                                 .onError(sink::error)
-                                .start())
+                                .start();
+                    })
                 .doFinally(signal -> ragFilterContext.clear())
                 .onErrorResume(throwable -> {
                     log.error("Error occurred in the stream", throwable);

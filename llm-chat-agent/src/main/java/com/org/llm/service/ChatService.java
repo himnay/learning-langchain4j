@@ -51,7 +51,7 @@ public class ChatService {
     }
 
     public Flux<ServerSentEvent<String>> streamChat(String conversationId, String message, String documentSource) {
-        return chatBackend.stream(normalizeConversationId(conversationId), message, documentSource);
+        return chatBackend.stream(systemPrompt(), normalizeConversationId(conversationId), message, documentSource);
     }
 
     @SuppressWarnings("unused")

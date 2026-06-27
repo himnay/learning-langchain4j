@@ -36,7 +36,7 @@ public class GatewayChatBackend implements ChatBackend {
     }
 
     @Override
-    public Flux<ServerSentEvent<String>> stream(String conversationId, String message, String documentSource) {
+    public Flux<ServerSentEvent<String>> stream(String systemPrompt, String conversationId, String message, String documentSource) {
         log.info("CHAT | streaming via gateway | session={}", conversationId);
         Flux<ServerSentEvent<String>> tokens = gatewayClient.streamChat(message, conversationId)
                 .map(token -> ServerSentEvent.<String>builder().event("token").data(token).build());

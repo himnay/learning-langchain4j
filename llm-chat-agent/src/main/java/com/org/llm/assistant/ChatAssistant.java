@@ -19,6 +19,7 @@ public interface ChatAssistant {
     @SystemMessage("{{systemPrompt}}")
     String chat(@MemoryId String conversationId, @V("systemPrompt") String systemPrompt, @UserMessage String message);
 
+    @Moderate
     @SystemMessage("{{systemPrompt}}")
     TokenStream chatStream(@MemoryId String conversationId, @V("systemPrompt") String systemPrompt, @UserMessage String message);
 }

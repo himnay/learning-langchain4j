@@ -23,8 +23,8 @@ public interface ChatBackend {
      */
     ChatAnswer chat(String systemPrompt, String conversationId, String message, String documentSource);
 
-    default Flux<ServerSentEvent<String>> stream(String conversationId, String message) {
-        return stream(conversationId, message, null);
+    default Flux<ServerSentEvent<String>> stream(String systemPrompt, String conversationId, String message) {
+        return stream(systemPrompt, conversationId, message, null);
     }
 
     /**
@@ -36,5 +36,5 @@ public interface ChatBackend {
      * @param documentSource when non-null, scopes RAG retrieval to documents whose {@code fileName}
      *                       metadata matches this value; ignored by backends without RAG integration.
      */
-    Flux<ServerSentEvent<String>> stream(String conversationId, String message, String documentSource);
+    Flux<ServerSentEvent<String>> stream(String systemPrompt, String conversationId, String message, String documentSource);
 }
