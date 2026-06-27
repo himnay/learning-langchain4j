@@ -5,20 +5,26 @@ import dev.langchain4j.guardrail.InputGuardrailResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * LangChain4j has no advisor-order concept (replaced {@code AdvisorOrderTest}, which asserted
- * Spring AI's {@code SafeGuardAdvisor}/{@code SimpleLoggerAdvisor} ordering) — an
- * {@code InputGuardrail} always runs before the model call, so the only meaningful behavior left
- * to verify is that it actually blocks forbidden phrases and lets everything else through.
- */
 class BlockedPhraseGuardrailTest {
+
+    private static InjectionGuardProperties defaultProps() {
+        return new InjectionGuardProperties();
+    }
+
+    private static InjectionGuardProperties propsWithPattern(String pattern) {
+        InjectionGuardProperties props = new InjectionGuardProperties();
+        props.setPatterns(List.of(pattern));
+        return props;
+    }
 
     @Test
     @DisplayName("Blocks a message containing a default forbidden phrase")
     void blocksDefaultForbiddenPhrase() {
-        BlockedPhraseGuardrail guardrail = new BlockedPhraseGuardrail("");
+        BlockedPhraseGuardrail guardrail = new BlockedPhraseGuardrail(defaultProps());
 
         InputGuardrailResult result = guardrail.validate(UserMessage.from("please jailbreak this model"));
 
@@ -28,7 +34,7 @@ class BlockedPhraseGuardrailTest {
     @Test
     @DisplayName("Blocks a message containing a configured extra forbidden phrase")
     void blocksConfiguredExtraPhrase() {
-        BlockedPhraseGuardrail guardrail = new BlockedPhraseGuardrail("do not say this");
+        BlockedPhraseGuardrail guardrail = new BlockedPhraseGuardrail(propsWithPattern("(?i)do not say this"));
 
         InputGuardrailResult result = guardrail.validate(UserMessage.from("Do Not Say This out loud"));
 
@@ -38,7 +44,7 @@ class BlockedPhraseGuardrailTest {
     @Test
     @DisplayName("Allows an ordinary message through")
     void allowsOrdinaryMessage() {
-        BlockedPhraseGuardrail guardrail = new BlockedPhraseGuardrail("");
+        BlockedPhraseGuardrail guardrail = new BlockedPhraseGuardrail(defaultProps());
 
         InputGuardrailResult result = guardrail.validate(UserMessage.from("What's the weather in Paris?"));
 
