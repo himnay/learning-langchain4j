@@ -24,7 +24,7 @@
                  even though playground.yaml doesn't currently mark any property nullable: true. -->
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
-            <version>0.2.6</version>
+            <version>0.2.10</version>
         </dependency>
         <dependency>
             <!-- Required for the generated models' @io.swagger.v3.oas.annotations.media.Schema
