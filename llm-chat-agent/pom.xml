@@ -21,7 +21,7 @@
                  even though chat-agent.yaml doesn't currently mark any property nullable: true. -->
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
-            <version>0.2.6</version>
+            <version>0.2.10</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
